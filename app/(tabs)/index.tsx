@@ -1,18 +1,17 @@
 import { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Modal, TextInput, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Modal, TextInput, KeyboardAvoidingView, Platform, Dimensions, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Fonts } from '../../constants/theme';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width - 48;
+const QR_SIZE = Math.min(CARD_WIDTH - 60, 180);
 
-// Deterministic QR-like pattern (21x21 like a real QR code)
 function QRCode({ greyed }: { greyed: boolean }) {
   const size = 21;
-  const blockSize = Math.floor((CARD_WIDTH - 80) / size);
+  const blockSize = Math.floor(QR_SIZE / size);
   const totalSize = blockSize * size;
 
-  // Seeded pattern to look like a real QR
   const pattern = [
     [1,1,1,1,1,1,1,0,1,0,1,1,0,0,1,1,1,1,1,1,1],
     [1,0,0,0,0,0,1,0,0,1,0,1,1,0,1,0,0,0,0,0,1],
@@ -37,8 +36,8 @@ function QRCode({ greyed }: { greyed: boolean }) {
     [1,1,1,1,1,1,1,0,1,0,1,1,0,1,0,0,1,0,1,0,1],
   ];
 
-  const color = greyed ? 'rgba(184, 216, 240, 0.12)' : Colors.blue;
-  const darkColor = greyed ? 'rgba(184, 216, 240, 0.04)' : 'rgba(59, 130, 246, 0.08)';
+  const color = greyed ? 'rgba(184, 216, 240, 0.15)' : Colors.blue;
+  const darkColor = greyed ? 'rgba(184, 216, 240, 0.03)' : 'rgba(59, 130, 246, 0.06)';
 
   return (
     <View style={{ width: totalSize, height: totalSize, flexDirection: 'row', flexWrap: 'wrap' }}>
@@ -83,95 +82,93 @@ function PurchaseModal({ visible, onClose }: { visible: boolean; onClose: () => 
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHandle} />
-          {done ? (
-            <View style={styles.successContainer}>
-              <Text style={styles.successCheck}>✓</Text>
-              <Text style={styles.successTitle}>You're In</Text>
-              <Text style={styles.successSub}>Your ticket is ready</Text>
-              <TouchableOpacity style={styles.purchaseBtn} onPress={handleClose}>
-                <Text style={styles.purchaseBtnText}>View Ticket</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <>
-              <Text style={styles.modalTitle}>General Admission</Text>
-
-              <View style={styles.priceRow}>
-                <Text style={styles.priceNote}>All-day access · All stages</Text>
-                <Text style={styles.priceAmount}>$75</Text>
+      <Pressable style={styles.modalOverlay} onPress={handleClose}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalInner}>
+          <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.modalHandle} />
+            {done ? (
+              <View style={styles.successContainer}>
+                <Text style={styles.successCheck}>✓</Text>
+                <Text style={styles.successTitle}>You're In</Text>
+                <Text style={styles.successSub}>Your ticket is ready</Text>
+                <TouchableOpacity style={styles.purchaseBtn} onPress={handleClose}>
+                  <Text style={styles.purchaseBtnText}>View Ticket</Text>
+                </TouchableOpacity>
               </View>
+            ) : (
+              <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
+                <Text style={styles.modalTitle}>General Admission</Text>
 
-              <View style={styles.divider} />
-
-              <Text style={styles.fieldLabel}>Name on Card</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Full name"
-                placeholderTextColor="rgba(184,216,240,0.25)"
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-              />
-
-              <Text style={styles.fieldLabel}>Card Number</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="4242 4242 4242 4242"
-                placeholderTextColor="rgba(184,216,240,0.25)"
-                value={cardNumber}
-                onChangeText={setCardNumber}
-                keyboardType="number-pad"
-                maxLength={19}
-              />
-
-              <View style={styles.row}>
-                <View style={styles.halfField}>
-                  <Text style={styles.fieldLabel}>Expiry</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="MM / YY"
-                    placeholderTextColor="rgba(184,216,240,0.25)"
-                    value={expiry}
-                    onChangeText={setExpiry}
-                    keyboardType="number-pad"
-                    maxLength={7}
-                  />
+                <View style={styles.priceRow}>
+                  <Text style={styles.priceNote}>All-day access · All stages</Text>
+                  <Text style={styles.priceAmount}>$75</Text>
                 </View>
-                <View style={styles.halfField}>
-                  <Text style={styles.fieldLabel}>CVC</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="123"
-                    placeholderTextColor="rgba(184,216,240,0.25)"
-                    value={cvc}
-                    onChangeText={setCvc}
-                    keyboardType="number-pad"
-                    maxLength={4}
-                    secureTextEntry
-                  />
+
+                <View style={styles.divider} />
+
+                <Text style={styles.fieldLabel}>Name on Card</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Full name"
+                  placeholderTextColor="rgba(184,216,240,0.25)"
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                />
+
+                <Text style={styles.fieldLabel}>Card Number</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="4242 4242 4242 4242"
+                  placeholderTextColor="rgba(184,216,240,0.25)"
+                  value={cardNumber}
+                  onChangeText={setCardNumber}
+                  keyboardType="number-pad"
+                  maxLength={19}
+                />
+
+                <View style={styles.row}>
+                  <View style={styles.halfField}>
+                    <Text style={styles.fieldLabel}>Expiry</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="MM / YY"
+                      placeholderTextColor="rgba(184,216,240,0.25)"
+                      value={expiry}
+                      onChangeText={setExpiry}
+                      keyboardType="number-pad"
+                      maxLength={7}
+                    />
+                  </View>
+                  <View style={styles.halfField}>
+                    <Text style={styles.fieldLabel}>CVC</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="123"
+                      placeholderTextColor="rgba(184,216,240,0.25)"
+                      value={cvc}
+                      onChangeText={setCvc}
+                      keyboardType="number-pad"
+                      maxLength={4}
+                      secureTextEntry
+                    />
+                  </View>
                 </View>
-              </View>
 
-              <TouchableOpacity
-                style={[styles.purchaseBtn, processing && styles.purchaseBtnDisabled]}
-                onPress={handlePurchase}
-                disabled={processing}
-              >
-                <Text style={styles.purchaseBtnText}>
-                  {processing ? 'Processing...' : 'Pay $75'}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={handleClose} style={styles.cancelBtn}>
-                <Text style={styles.cancelText}>Cancel</Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
-      </KeyboardAvoidingView>
+                <TouchableOpacity
+                  style={[styles.purchaseBtn, processing && styles.purchaseBtnDisabled]}
+                  onPress={handlePurchase}
+                  disabled={processing}
+                >
+                  <Text style={styles.purchaseBtnText}>
+                    {processing ? 'Processing...' : 'Pay $75'}
+                  </Text>
+                </TouchableOpacity>
+              </ScrollView>
+            )}
+          </Pressable>
+        </KeyboardAvoidingView>
+      </Pressable>
     </Modal>
   );
 }
@@ -182,31 +179,28 @@ export default function TicketScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        {/* Small logo at top */}
+        {/* Logo */}
         <Image
           source={require('../../assets/images/logo.png')}
           style={styles.logoSmall}
           resizeMode="contain"
         />
 
-        {/* Ticket card — the main focus */}
+        {/* Ticket card */}
         <View style={styles.ticket}>
-          {/* Ticket top */}
           <View style={styles.ticketTop}>
             <Text style={styles.ticketTitle}>Ten Thousand</Text>
             <Text style={styles.ticketSub}>General Admission</Text>
           </View>
 
-          {/* Tear line */}
           <View style={styles.tearLine}>
             <View style={styles.tearCircleLeft} />
-            {Array.from({ length: 25 }).map((_, i) => (
+            {Array.from({ length: 20 }).map((_, i) => (
               <View key={i} style={styles.tearDash} />
             ))}
             <View style={styles.tearCircleRight} />
           </View>
 
-          {/* QR section */}
           <TouchableOpacity
             style={styles.ticketBottom}
             onPress={() => setShowPurchase(true)}
@@ -254,9 +248,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   logoSmall: {
-    width: 140,
-    height: 80,
-    marginBottom: 24,
+    width: 120,
+    height: 65,
+    marginBottom: 16,
   },
 
   // Ticket
@@ -269,21 +263,21 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   ticketTop: {
-    paddingVertical: 24,
-    paddingHorizontal: 24,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
     alignItems: 'center',
   },
   ticketTitle: {
     fontFamily: Fonts.heading,
-    fontSize: 28,
+    fontSize: 24,
     letterSpacing: 4,
     color: Colors.white,
   },
   ticketSub: {
     fontFamily: Fonts.bodyLight,
-    fontSize: 13,
+    fontSize: 12,
     color: Colors.muted,
-    marginTop: 4,
+    marginTop: 2,
     letterSpacing: 1,
   },
 
@@ -291,22 +285,21 @@ const styles = StyleSheet.create({
   tearLine: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 0,
     overflow: 'hidden',
   },
   tearCircleLeft: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     backgroundColor: Colors.navy,
-    marginLeft: -10,
+    marginLeft: -9,
   },
   tearCircleRight: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     backgroundColor: Colors.navy,
-    marginRight: -10,
+    marginRight: -9,
   },
   tearDash: {
     flex: 1,
@@ -317,28 +310,28 @@ const styles = StyleSheet.create({
 
   // QR
   ticketBottom: {
-    paddingVertical: 28,
+    paddingVertical: 20,
     alignItems: 'center',
   },
   tapText: {
     fontFamily: Fonts.heading,
-    fontSize: 16,
+    fontSize: 14,
     letterSpacing: 3,
     color: Colors.blue,
-    marginTop: 20,
+    marginTop: 14,
   },
   tapSubText: {
     fontFamily: Fonts.bodyLight,
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.muted,
-    marginTop: 4,
+    marginTop: 2,
   },
 
   // Info row
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 32,
+    marginTop: 24,
     width: CARD_WIDTH,
   },
   infoItem: {
@@ -347,19 +340,19 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontFamily: Fonts.heading,
-    fontSize: 11,
+    fontSize: 10,
     letterSpacing: 3,
     color: Colors.muted,
   },
   infoValue: {
     fontFamily: Fonts.bodyMedium,
-    fontSize: 13,
+    fontSize: 12,
     color: Colors.lightBlue,
-    marginTop: 4,
+    marginTop: 3,
   },
   infoDivider: {
     width: 1,
-    height: 30,
+    height: 24,
     backgroundColor: 'rgba(59, 130, 246, 0.1)',
   },
 
@@ -369,12 +362,16 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
+  modalInner: {
+    justifyContent: 'flex-end',
+  },
   modalContent: {
     backgroundColor: Colors.deepBlue,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 24,
     paddingBottom: 44,
+    maxHeight: '80%',
   },
   modalHandle: {
     width: 36,
@@ -386,10 +383,10 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontFamily: Fonts.heading,
-    fontSize: 24,
+    fontSize: 22,
     letterSpacing: 2,
     color: Colors.white,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   priceRow: {
     flexDirection: 'row',
@@ -403,27 +400,27 @@ const styles = StyleSheet.create({
   },
   priceAmount: {
     fontFamily: Fonts.heading,
-    fontSize: 28,
+    fontSize: 26,
     color: Colors.blue,
   },
   divider: {
     height: 1,
     backgroundColor: 'rgba(59, 130, 246, 0.1)',
-    marginVertical: 20,
+    marginVertical: 16,
   },
   fieldLabel: {
     fontFamily: Fonts.heading,
-    fontSize: 11,
+    fontSize: 10,
     letterSpacing: 2,
     color: Colors.muted,
-    marginBottom: 8,
-    marginTop: 12,
+    marginBottom: 6,
+    marginTop: 10,
   },
   input: {
     borderWidth: 1,
     borderColor: 'rgba(59, 130, 246, 0.12)',
     backgroundColor: 'rgba(255,255,255,0.03)',
-    padding: 14,
+    padding: 12,
     borderRadius: 8,
     color: Colors.white,
     fontFamily: Fonts.body,
@@ -438,28 +435,19 @@ const styles = StyleSheet.create({
   },
   purchaseBtn: {
     backgroundColor: Colors.blue,
-    padding: 16,
+    padding: 15,
     alignItems: 'center',
     borderRadius: 10,
-    marginTop: 24,
+    marginTop: 20,
   },
   purchaseBtnDisabled: {
     opacity: 0.6,
   },
   purchaseBtnText: {
     fontFamily: Fonts.heading,
-    fontSize: 18,
+    fontSize: 17,
     letterSpacing: 2,
     color: Colors.white,
-  },
-  cancelBtn: {
-    alignItems: 'center',
-    paddingTop: 16,
-  },
-  cancelText: {
-    fontFamily: Fonts.bodyLight,
-    fontSize: 14,
-    color: Colors.muted,
   },
 
   // Success
@@ -468,20 +456,20 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   successCheck: {
-    fontSize: 48,
+    fontSize: 44,
     color: '#059669',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   successTitle: {
     fontFamily: Fonts.heading,
-    fontSize: 32,
+    fontSize: 28,
     letterSpacing: 2,
     color: Colors.white,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   successSub: {
     fontFamily: Fonts.bodyLight,
-    fontSize: 15,
+    fontSize: 14,
     color: Colors.lightBlue,
     marginBottom: 8,
   },
