@@ -1,29 +1,56 @@
 import { useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Modal, TextInput, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Fonts } from '../../constants/theme';
 
-function QRPlaceholder() {
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = width - 48;
+
+// Deterministic QR-like pattern (21x21 like a real QR code)
+function QRCode({ greyed }: { greyed: boolean }) {
+  const size = 21;
+  const blockSize = Math.floor((CARD_WIDTH - 80) / size);
+  const totalSize = blockSize * size;
+
+  // Seeded pattern to look like a real QR
+  const pattern = [
+    [1,1,1,1,1,1,1,0,1,0,1,1,0,0,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,1,0,0,1,0,1,1,0,1,0,0,0,0,0,1],
+    [1,0,1,1,1,0,1,0,1,1,0,0,1,0,1,0,1,1,1,0,1],
+    [1,0,1,1,1,0,1,0,0,1,1,0,0,0,1,0,1,1,1,0,1],
+    [1,0,1,1,1,0,1,0,1,0,0,1,1,0,1,0,1,1,1,0,1],
+    [1,0,0,0,0,0,1,0,0,1,0,0,1,0,1,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,0,1,0,1,0,1,0,1,1,1,1,1,1,1],
+    [0,0,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,0,0,0,0],
+    [1,0,1,1,1,0,1,1,0,0,1,0,1,1,0,1,1,0,1,0,1],
+    [0,1,0,1,0,1,0,1,1,0,0,1,0,1,0,0,1,1,0,1,0],
+    [1,1,0,0,1,0,1,0,0,1,1,0,1,0,1,0,0,1,1,0,1],
+    [0,1,1,0,1,1,0,0,1,0,0,1,0,1,1,0,1,0,0,1,0],
+    [1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1],
+    [0,0,0,0,0,0,0,0,1,0,1,1,0,1,0,1,0,0,1,1,0],
+    [1,1,1,1,1,1,1,0,0,1,0,0,1,0,1,0,1,1,0,0,1],
+    [1,0,0,0,0,0,1,0,1,0,1,1,0,1,1,0,0,1,0,1,0],
+    [1,0,1,1,1,0,1,0,0,1,1,0,1,0,0,1,1,0,1,0,1],
+    [1,0,1,1,1,0,1,0,1,1,0,1,0,1,0,0,1,0,0,1,0],
+    [1,0,1,1,1,0,1,0,1,0,1,0,1,1,1,0,0,1,1,0,1],
+    [1,0,0,0,0,0,1,0,0,1,0,1,0,0,1,1,0,1,0,1,0],
+    [1,1,1,1,1,1,1,0,1,0,1,1,0,1,0,0,1,0,1,0,1],
+  ];
+
+  const color = greyed ? 'rgba(184, 216, 240, 0.12)' : Colors.blue;
+  const darkColor = greyed ? 'rgba(184, 216, 240, 0.04)' : 'rgba(59, 130, 246, 0.08)';
+
   return (
-    <View style={styles.qrContainer}>
-      {/* Grid of squares to mimic a QR code */}
-      {Array.from({ length: 7 }).map((_, row) => (
-        <View key={row} style={styles.qrRow}>
-          {Array.from({ length: 7 }).map((_, col) => (
-            <View
-              key={col}
-              style={[
-                styles.qrBlock,
-                {
-                  opacity:
-                    (row < 3 && col < 3) || (row < 3 && col > 3) || (row > 3 && col < 3)
-                      ? 0.25
-                      : Math.random() > 0.4 ? 0.18 : 0.08,
-                },
-              ]}
-            />
-          ))}
-        </View>
+    <View style={{ width: totalSize, height: totalSize, flexDirection: 'row', flexWrap: 'wrap' }}>
+      {pattern.flat().map((val, i) => (
+        <View
+          key={i}
+          style={{
+            width: blockSize,
+            height: blockSize,
+            backgroundColor: val ? color : darkColor,
+          }}
+        />
       ))}
     </View>
   );
@@ -58,29 +85,24 @@ function PurchaseModal({ visible, onClose }: { visible: boolean; onClose: () => 
     <Modal visible={visible} animationType="slide" transparent>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
         <View style={styles.modalContent}>
+          <View style={styles.modalHandle} />
           {done ? (
             <View style={styles.successContainer}>
               <Text style={styles.successCheck}>✓</Text>
               <Text style={styles.successTitle}>You're In</Text>
-              <Text style={styles.successSub}>Your ticket is ready. See you there.</Text>
+              <Text style={styles.successSub}>Your ticket is ready</Text>
               <TouchableOpacity style={styles.purchaseBtn} onPress={handleClose}>
                 <Text style={styles.purchaseBtnText}>View Ticket</Text>
               </TouchableOpacity>
             </View>
           ) : (
             <>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Purchase Entrance</Text>
-                <TouchableOpacity onPress={handleClose}>
-                  <Text style={styles.modalClose}>✕</Text>
-                </TouchableOpacity>
-              </View>
+              <Text style={styles.modalTitle}>General Admission</Text>
 
               <View style={styles.priceRow}>
-                <Text style={styles.priceLabel}>General Admission</Text>
+                <Text style={styles.priceNote}>All-day access · All stages</Text>
                 <Text style={styles.priceAmount}>$75</Text>
               </View>
-              <Text style={styles.priceNote}>Good for all days</Text>
 
               <View style={styles.divider} />
 
@@ -88,7 +110,7 @@ function PurchaseModal({ visible, onClose }: { visible: boolean; onClose: () => 
               <TextInput
                 style={styles.input}
                 placeholder="Full name"
-                placeholderTextColor="rgba(184,216,240,0.3)"
+                placeholderTextColor="rgba(184,216,240,0.25)"
                 value={name}
                 onChangeText={setName}
                 autoCapitalize="words"
@@ -98,7 +120,7 @@ function PurchaseModal({ visible, onClose }: { visible: boolean; onClose: () => 
               <TextInput
                 style={styles.input}
                 placeholder="4242 4242 4242 4242"
-                placeholderTextColor="rgba(184,216,240,0.3)"
+                placeholderTextColor="rgba(184,216,240,0.25)"
                 value={cardNumber}
                 onChangeText={setCardNumber}
                 keyboardType="number-pad"
@@ -111,7 +133,7 @@ function PurchaseModal({ visible, onClose }: { visible: boolean; onClose: () => 
                   <TextInput
                     style={styles.input}
                     placeholder="MM / YY"
-                    placeholderTextColor="rgba(184,216,240,0.3)"
+                    placeholderTextColor="rgba(184,216,240,0.25)"
                     value={expiry}
                     onChangeText={setExpiry}
                     keyboardType="number-pad"
@@ -123,7 +145,7 @@ function PurchaseModal({ visible, onClose }: { visible: boolean; onClose: () => 
                   <TextInput
                     style={styles.input}
                     placeholder="123"
-                    placeholderTextColor="rgba(184,216,240,0.3)"
+                    placeholderTextColor="rgba(184,216,240,0.25)"
                     value={cvc}
                     onChangeText={setCvc}
                     keyboardType="number-pad"
@@ -142,6 +164,10 @@ function PurchaseModal({ visible, onClose }: { visible: boolean; onClose: () => 
                   {processing ? 'Processing...' : 'Pay $75'}
                 </Text>
               </TouchableOpacity>
+
+              <TouchableOpacity onPress={handleClose} style={styles.cancelBtn}>
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
             </>
           )}
         </View>
@@ -155,45 +181,61 @@ export default function TicketScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <View style={styles.hero}>
-          <Image
-            source={require('../../assets/images/logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          <Text style={styles.intro}>Bringing people together around</Text>
-          <Text style={styles.pillars}>
-            Food{'  '}
-            <Text style={styles.dot}>·</Text>
-            {'  '}Fashion{'  '}
-            <Text style={styles.dot}>·</Text>
-            {'  '}Music
-          </Text>
-        </View>
+      <View style={styles.content}>
+        {/* Small logo at top */}
+        <Image
+          source={require('../../assets/images/logo.png')}
+          style={styles.logoSmall}
+          resizeMode="contain"
+        />
 
-        <View style={styles.ticketCard}>
-          <Text style={styles.ticketLabel}>Your Ticket</Text>
+        {/* Ticket card — the main focus */}
+        <View style={styles.ticket}>
+          {/* Ticket top */}
+          <View style={styles.ticketTop}>
+            <Text style={styles.ticketTitle}>Ten Thousand</Text>
+            <Text style={styles.ticketSub}>General Admission</Text>
+          </View>
 
-          <TouchableOpacity style={styles.qrTouchable} onPress={() => setShowPurchase(true)} activeOpacity={0.7}>
-            <QRPlaceholder />
-            <View style={styles.qrOverlay}>
-              <Text style={styles.qrOverlayText}>Purchase Entrance</Text>
-              <Text style={styles.qrOverlaySub}>Good for all days</Text>
-            </View>
+          {/* Tear line */}
+          <View style={styles.tearLine}>
+            <View style={styles.tearCircleLeft} />
+            {Array.from({ length: 25 }).map((_, i) => (
+              <View key={i} style={styles.tearDash} />
+            ))}
+            <View style={styles.tearCircleRight} />
+          </View>
+
+          {/* QR section */}
+          <TouchableOpacity
+            style={styles.ticketBottom}
+            onPress={() => setShowPurchase(true)}
+            activeOpacity={0.8}
+          >
+            <QRCode greyed />
+            <Text style={styles.tapText}>Tap to Purchase</Text>
+            <Text style={styles.tapSubText}>Good for all days</Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.ideaSection}>
-          <Text style={styles.statement}>
-            A festival for the things that{' '}
-            <Text style={{ color: Colors.blue }}>connect</Text> all of us.
-          </Text>
-          <Text style={styles.sub}>
-            The world is already here. Every culture in our state has a dish, a sound, and a style. Ten Thousand puts them all in one place.
-          </Text>
+        {/* Bottom info */}
+        <View style={styles.infoRow}>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Food</Text>
+            <Text style={styles.infoValue}>12 Vendors</Text>
+          </View>
+          <View style={styles.infoDivider} />
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Fashion</Text>
+            <Text style={styles.infoValue}>8 Designers</Text>
+          </View>
+          <View style={styles.infoDivider} />
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Music</Text>
+            <Text style={styles.infoValue}>6 Acts</Text>
+          </View>
         </View>
-      </ScrollView>
+      </View>
 
       <PurchaseModal visible={showPurchase} onClose={() => setShowPurchase(false)} />
     </SafeAreaView>
@@ -205,114 +247,120 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.navy,
   },
-  scroll: {
-    paddingBottom: 40,
-  },
-  hero: {
+  content: {
+    flex: 1,
     alignItems: 'center',
-    paddingTop: 20,
-    paddingBottom: 30,
-    paddingHorizontal: 20,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
   },
-  logo: {
-    width: 260,
-    height: 160,
-    marginBottom: 20,
-  },
-  intro: {
-    fontFamily: Fonts.bodyLight,
-    fontSize: 12,
-    letterSpacing: 3,
-    textTransform: 'uppercase',
-    color: Colors.lightBlue,
-    marginBottom: 6,
-  },
-  pillars: {
-    fontFamily: Fonts.heading,
-    fontSize: 22,
-    letterSpacing: 6,
-    color: Colors.lightBlue,
-  },
-  dot: {
-    color: Colors.blue,
-  },
-
-  // Ticket card
-  ticketCard: {
-    marginHorizontal: 20,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.12)',
-    alignItems: 'center',
-  },
-  ticketLabel: {
-    fontFamily: Fonts.heading,
-    fontSize: 13,
-    letterSpacing: 4,
-    color: Colors.blue,
+  logoSmall: {
+    width: 140,
+    height: 80,
     marginBottom: 24,
   },
-  qrTouchable: {
-    position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  qrContainer: {
-    width: 200,
-    height: 200,
-    padding: 16,
-    gap: 4,
-  },
-  qrRow: {
-    flexDirection: 'row',
-    flex: 1,
-    gap: 4,
-  },
-  qrBlock: {
-    flex: 1,
-    backgroundColor: Colors.lightBlue,
-    borderRadius: 2,
-  },
-  qrOverlay: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(10, 22, 40, 0.85)',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
+
+  // Ticket
+  ticket: {
+    width: CARD_WIDTH,
+    backgroundColor: Colors.deepBlue,
     borderWidth: 1,
-    borderColor: Colors.blue,
+    borderColor: 'rgba(59, 130, 246, 0.12)',
+    borderRadius: 16,
+    overflow: 'hidden',
   },
-  qrOverlayText: {
+  ticketTop: {
+    paddingVertical: 24,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  ticketTitle: {
     fontFamily: Fonts.heading,
-    fontSize: 18,
-    letterSpacing: 2,
+    fontSize: 28,
+    letterSpacing: 4,
     color: Colors.white,
   },
-  qrOverlaySub: {
+  ticketSub: {
+    fontFamily: Fonts.bodyLight,
+    fontSize: 13,
+    color: Colors.muted,
+    marginTop: 4,
+    letterSpacing: 1,
+  },
+
+  // Tear line
+  tearLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 0,
+    overflow: 'hidden',
+  },
+  tearCircleLeft: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: Colors.navy,
+    marginLeft: -10,
+  },
+  tearCircleRight: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: Colors.navy,
+    marginRight: -10,
+  },
+  tearDash: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    marginHorizontal: 2,
+  },
+
+  // QR
+  ticketBottom: {
+    paddingVertical: 28,
+    alignItems: 'center',
+  },
+  tapText: {
+    fontFamily: Fonts.heading,
+    fontSize: 16,
+    letterSpacing: 3,
+    color: Colors.blue,
+    marginTop: 20,
+  },
+  tapSubText: {
     fontFamily: Fonts.bodyLight,
     fontSize: 12,
-    color: Colors.lightBlue,
+    color: Colors.muted,
     marginTop: 4,
   },
 
-  // Idea section
-  ideaSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 40,
+  // Info row
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 32,
+    width: CARD_WIDTH,
   },
-  statement: {
+  infoItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  infoLabel: {
     fontFamily: Fonts.heading,
-    fontSize: 32,
-    lineHeight: 36,
-    color: Colors.white,
-    marginBottom: 16,
+    fontSize: 11,
+    letterSpacing: 3,
+    color: Colors.muted,
   },
-  sub: {
-    fontFamily: Fonts.bodyLight,
-    fontSize: 15,
-    lineHeight: 24,
+  infoValue: {
+    fontFamily: Fonts.bodyMedium,
+    fontSize: 13,
     color: Colors.lightBlue,
+    marginTop: 4,
+  },
+  infoDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
   },
 
   // Modal
@@ -323,48 +371,40 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: Colors.deepBlue,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(59, 130, 246, 0.15)',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     padding: 24,
-    paddingBottom: 40,
+    paddingBottom: 44,
   },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
+  modalHandle: {
+    width: 36,
+    height: 4,
+    backgroundColor: 'rgba(184, 216, 240, 0.2)',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 20,
   },
   modalTitle: {
     fontFamily: Fonts.heading,
     fontSize: 24,
     letterSpacing: 2,
     color: Colors.white,
-  },
-  modalClose: {
-    fontSize: 20,
-    color: Colors.muted,
-    padding: 4,
+    marginBottom: 8,
   },
   priceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  priceLabel: {
-    fontFamily: Fonts.bodyMedium,
-    fontSize: 16,
-    color: Colors.white,
+  priceNote: {
+    fontFamily: Fonts.bodyLight,
+    fontSize: 13,
+    color: Colors.muted,
   },
   priceAmount: {
     fontFamily: Fonts.heading,
     fontSize: 28,
     color: Colors.blue,
-  },
-  priceNote: {
-    fontFamily: Fonts.bodyLight,
-    fontSize: 13,
-    color: Colors.muted,
-    marginTop: 4,
   },
   divider: {
     height: 1,
@@ -381,9 +421,10 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.15)',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderColor: 'rgba(59, 130, 246, 0.12)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
     padding: 14,
+    borderRadius: 8,
     color: Colors.white,
     fontFamily: Fonts.body,
     fontSize: 15,
@@ -399,6 +440,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.blue,
     padding: 16,
     alignItems: 'center',
+    borderRadius: 10,
     marginTop: 24,
   },
   purchaseBtnDisabled: {
@@ -409,6 +451,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     letterSpacing: 2,
     color: Colors.white,
+  },
+  cancelBtn: {
+    alignItems: 'center',
+    paddingTop: 16,
+  },
+  cancelText: {
+    fontFamily: Fonts.bodyLight,
+    fontSize: 14,
+    color: Colors.muted,
   },
 
   // Success
