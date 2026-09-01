@@ -216,17 +216,17 @@ export default function TicketScreen() {
         <View style={styles.infoRow}>
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>Food</Text>
-            <Text style={styles.infoValue}>12 Vendors</Text>
+            <Text style={styles.infoValue}>Taste</Text>
           </View>
           <View style={styles.infoDivider} />
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>Fashion</Text>
-            <Text style={styles.infoValue}>8 Designers</Text>
+            <Text style={styles.infoValue}>Expression</Text>
           </View>
           <View style={styles.infoDivider} />
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>Music</Text>
-            <Text style={styles.infoValue}>6 Acts</Text>
+            <Text style={styles.infoValue}>Feeling</Text>
           </View>
         </View>
       </View>
