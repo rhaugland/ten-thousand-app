@@ -83,9 +83,13 @@ function PurchaseModal({ visible, onClose }: { visible: boolean; onClose: () => 
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <Pressable style={styles.modalOverlay} onPress={handleClose}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalInner}>
-          <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+        <View style={{ flex: 1 }} />
+      </Pressable>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalInner}>
+        <View style={styles.modalContent}>
+          <TouchableOpacity onPress={handleClose} style={styles.modalHandleArea} activeOpacity={0.7}>
             <View style={styles.modalHandle} />
+          </TouchableOpacity>
             {done ? (
               <View style={styles.successContainer}>
                 <Text style={styles.successCheck}>✓</Text>
@@ -166,9 +170,8 @@ function PurchaseModal({ visible, onClose }: { visible: boolean; onClose: () => 
                 </TouchableOpacity>
               </ScrollView>
             )}
-          </Pressable>
-        </KeyboardAvoidingView>
-      </Pressable>
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -358,11 +361,15 @@ const styles = StyleSheet.create({
 
   // Modal
   modalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
   modalInner: {
+    flex: 1,
     justifyContent: 'flex-end',
   },
   modalContent: {
@@ -373,13 +380,16 @@ const styles = StyleSheet.create({
     paddingBottom: 44,
     maxHeight: '80%',
   },
+  modalHandleArea: {
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   modalHandle: {
     width: 36,
     height: 4,
-    backgroundColor: 'rgba(184, 216, 240, 0.2)',
+    backgroundColor: 'rgba(184, 216, 240, 0.3)',
     borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: 20,
   },
   modalTitle: {
     fontFamily: Fonts.heading,
