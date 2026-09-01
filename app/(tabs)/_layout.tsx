@@ -4,7 +4,7 @@ import { Colors, Fonts } from '../../constants/theme';
 
 function TabIcon({ label, focused }: { label: string; focused: boolean }) {
   const icons: Record<string, string> = {
-    Home: '●',
+    Ticket: '⬡',
     Schedule: '▦',
     Map: '◎',
     Vendors: '◆',
@@ -41,8 +41,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ focused }) => <TabIcon label="Home" focused={focused} />,
+          title: 'Ticket',
+          tabBarIcon: ({ focused }) => <TabIcon label="Ticket" focused={focused} />,
         }}
       />
       <Tabs.Screen
